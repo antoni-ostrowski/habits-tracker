@@ -12,6 +12,7 @@ import (
 	db "github.com/antoni-ostrowski/habit-tracker/internal/db/sqlc"
 
 	"github.com/alexedwards/scs/v2"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
@@ -21,6 +22,7 @@ import (
 // New shared deps join here as fields; never request-scoped data.
 type Deps struct {
 	Queries  *db.Queries
+	Pool     *pgxpool.Pool
 	Sessions *scs.SessionManager
 	Logger   *slog.Logger
 	Tel      *Telemetry

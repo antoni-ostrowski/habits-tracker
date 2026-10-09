@@ -33,7 +33,7 @@ func userCount(t *testing.T) int {
 }
 
 // POST /signup stores a hashed password, logs the user in, and the session
-// immediately works for todo mutations.
+// immediately works for habit mutations.
 func TestSignup_CreatesUserAndLogsIn(t *testing.T) {
 	app, q, _, _ := setup(t)
 
@@ -60,7 +60,7 @@ func TestSignup_CreatesUserAndLogsIn(t *testing.T) {
 		t.Error("stored hash does not verify")
 	}
 
-	rec = Do(t, app, http.MethodPost, "/todos", url.Values{"title": {"first"}}, cookie, nil)
+	rec = Do(t, app, http.MethodPost, "/habits", url.Values{"name": {"first"}, "weight": {"1"}}, cookie, nil)
 	WantCode(t, rec, http.StatusOK)
 	WantBody(t, rec, "first")
 
@@ -123,7 +123,7 @@ func TestSignin(t *testing.T) {
 		t.Fatal("no session cookie set on signin")
 	}
 
-	mut := Do(t, app, http.MethodPost, "/todos", url.Values{"title": {"via signin"}}, cookies[0], nil)
+	mut := Do(t, app, http.MethodPost, "/habits", url.Values{"name": {"via signin"}, "weight": {"1"}}, cookies[0], nil)
 	WantCode(t, mut, http.StatusOK)
 	WantBody(t, mut, "via signin")
 }
@@ -163,7 +163,7 @@ func TestSignout(t *testing.T) {
 		t.Fatalf("Clear-Site-Data = %q, want cache prune", h)
 	}
 
-	rec = Do(t, app, http.MethodPost, "/todos", url.Values{"title": {"x"}}, cookie, nil)
+	rec = Do(t, app, http.MethodPost, "/habits", url.Values{"name": {"x"}, "weight": {"1"}}, cookie, nil)
 	WantCode(t, rec, http.StatusSeeOther)
 	if loc := rec.Header().Get("Location"); loc != "/signin" {
 		t.Fatalf("location = %q, want /signin", loc)

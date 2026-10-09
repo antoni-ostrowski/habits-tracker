@@ -1,0 +1,51 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: habits
+
+steps:
+  check:
+    image: debian:trixie-slim
+    commands:
+      - apt-get update && apt-get install -y --no-install-recommends ca-certificates curl git
+      - curl -fsSL https://mise.run | sh
+      - export PATH="$HOME/.local/bin:$PATH"
+      - mise trust
+      - mise install
+      - touch .env.local
+      - mise run check
+    when:
+      - event: [push, pull_request]
+
+  test-integration:
+    image: golang:1.27-trixie
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/habits?sslmode=disable
+      INTEGRATION_TESTS: 1
+    commands:
+      - apt-get update && apt-get install -y --no-install-recommends postgresql-client
+      - for i in $(seq 1 30); do pg_isready -h db -U postgres -d habits && break; sleep 1; done
+      - go test ./internal/integration -v
+    when:
+      - event: [push, pull_request]
+
+  deploy:
+    image: docker:27-cli
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      DOCKER_USERNAME:
+        from_secret: DOCKER_USERNAME
+      DOCKER_PASSWORD:
+        from_secret: DOCKER_PASSWORD
+    commands:
+      - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - docker build --platform=linux/amd64 -t antost360/habits-tracker:latest .
+      - docker push antost360/habits-tracker:latest    
+    when:
+      - event: push 
+        branch: main
+

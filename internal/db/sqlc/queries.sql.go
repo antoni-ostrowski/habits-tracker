@@ -9,27 +9,54 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createTodo = `-- name: CreateTodo :one
-INSERT INTO todos (user_id, title)
-VALUES ($1, $2)
-RETURNING id, user_id, title, done
+const createCheckin = `-- name: CreateCheckin :exec
+INSERT INTO checkins (user_id, habit_id, day, stars_q)
+VALUES ($1, $2, $3, $4)
+ON CONFLICT DO NOTHING
 `
 
-type CreateTodoParams struct {
-	UserID uuid.UUID `json:"userId"`
-	Title  string    `json:"title"`
+type CreateCheckinParams struct {
+	UserID  uuid.UUID   `json:"userId"`
+	HabitID int64       `json:"habitId"`
+	Day     pgtype.Date `json:"day"`
+	StarsQ  int32       `json:"starsQ"`
 }
 
-func (q *Queries) CreateTodo(ctx context.Context, arg CreateTodoParams) (Todo, error) {
-	row := q.db.QueryRow(ctx, createTodo, arg.UserID, arg.Title)
-	var i Todo
+func (q *Queries) CreateCheckin(ctx context.Context, arg CreateCheckinParams) error {
+	_, err := q.db.Exec(ctx, createCheckin,
+		arg.UserID,
+		arg.HabitID,
+		arg.Day,
+		arg.StarsQ,
+	)
+	return err
+}
+
+const createHabit = `-- name: CreateHabit :one
+INSERT INTO habits (user_id, name, weight_q)
+VALUES ($1, $2, $3)
+RETURNING id, user_id, name, weight_q, deleted_at, created_at
+`
+
+type CreateHabitParams struct {
+	UserID  uuid.UUID `json:"userId"`
+	Name    string    `json:"name"`
+	WeightQ int32     `json:"weightQ"`
+}
+
+func (q *Queries) CreateHabit(ctx context.Context, arg CreateHabitParams) (Habit, error) {
+	row := q.db.QueryRow(ctx, createHabit, arg.UserID, arg.Name, arg.WeightQ)
+	var i Habit
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.Title,
-		&i.Done,
+		&i.Name,
+		&i.WeightQ,
+		&i.DeletedAt,
+		&i.CreatedAt,
 	)
 	return i, err
 }
@@ -37,7 +64,7 @@ func (q *Queries) CreateTodo(ctx context.Context, arg CreateTodoParams) (Todo, e
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (id, username, password_hash)
 VALUES ($1, $2, $3)
-RETURNING id, username, password_hash, created_at
+RETURNING id, username, password_hash, day_zero, created_at
 `
 
 type CreateUserParams struct {
@@ -53,51 +80,79 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.ID,
 		&i.Username,
 		&i.PasswordHash,
+		&i.DayZero,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
-const deleteTodo = `-- name: DeleteTodo :exec
-DELETE FROM todos
-WHERE id = $1 AND user_id = $2
+const deleteCheckin = `-- name: DeleteCheckin :exec
+DELETE FROM checkins
+WHERE user_id = $1 AND habit_id = $2 AND day = $3
 `
 
-type DeleteTodoParams struct {
-	ID     int64     `json:"id"`
-	UserID uuid.UUID `json:"userId"`
+type DeleteCheckinParams struct {
+	UserID  uuid.UUID   `json:"userId"`
+	HabitID int64       `json:"habitId"`
+	Day     pgtype.Date `json:"day"`
 }
 
-func (q *Queries) DeleteTodo(ctx context.Context, arg DeleteTodoParams) error {
-	_, err := q.db.Exec(ctx, deleteTodo, arg.ID, arg.UserID)
+func (q *Queries) DeleteCheckin(ctx context.Context, arg DeleteCheckinParams) error {
+	_, err := q.db.Exec(ctx, deleteCheckin, arg.UserID, arg.HabitID, arg.Day)
 	return err
 }
 
-const getTodo = `-- name: GetTodo :one
-SELECT id, user_id, title, done
-FROM todos
-WHERE id = $1 AND user_id = $2
+const getCheckin = `-- name: GetCheckin :one
+SELECT user_id, habit_id, day, stars_q
+FROM checkins
+WHERE user_id = $1 AND habit_id = $2 AND day = $3
 `
 
-type GetTodoParams struct {
+type GetCheckinParams struct {
+	UserID  uuid.UUID   `json:"userId"`
+	HabitID int64       `json:"habitId"`
+	Day     pgtype.Date `json:"day"`
+}
+
+func (q *Queries) GetCheckin(ctx context.Context, arg GetCheckinParams) (Checkin, error) {
+	row := q.db.QueryRow(ctx, getCheckin, arg.UserID, arg.HabitID, arg.Day)
+	var i Checkin
+	err := row.Scan(
+		&i.UserID,
+		&i.HabitID,
+		&i.Day,
+		&i.StarsQ,
+	)
+	return i, err
+}
+
+const getHabit = `-- name: GetHabit :one
+SELECT id, user_id, name, weight_q, deleted_at, created_at
+FROM habits
+WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+`
+
+type GetHabitParams struct {
 	ID     int64     `json:"id"`
 	UserID uuid.UUID `json:"userId"`
 }
 
-func (q *Queries) GetTodo(ctx context.Context, arg GetTodoParams) (Todo, error) {
-	row := q.db.QueryRow(ctx, getTodo, arg.ID, arg.UserID)
-	var i Todo
+func (q *Queries) GetHabit(ctx context.Context, arg GetHabitParams) (Habit, error) {
+	row := q.db.QueryRow(ctx, getHabit, arg.ID, arg.UserID)
+	var i Habit
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.Title,
-		&i.Done,
+		&i.Name,
+		&i.WeightQ,
+		&i.DeletedAt,
+		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, username, password_hash, created_at
+SELECT id, username, password_hash, day_zero, created_at
 FROM users
 WHERE id = $1
 `
@@ -109,13 +164,14 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.ID,
 		&i.Username,
 		&i.PasswordHash,
+		&i.DayZero,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, username, password_hash, created_at
+SELECT id, username, password_hash, day_zero, created_at
 FROM users
 WHERE username = $1
 `
@@ -127,32 +183,52 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.ID,
 		&i.Username,
 		&i.PasswordHash,
+		&i.DayZero,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
-const listTodos = `-- name: ListTodos :many
-SELECT id, user_id, title, done
-FROM todos
-WHERE user_id = $1
-ORDER BY id
+const habitTotalQ = `-- name: HabitTotalQ :one
+SELECT COALESCE(SUM(weight_q), 0)::BIGINT
+FROM habits
+WHERE user_id = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) ListTodos(ctx context.Context, userID uuid.UUID) ([]Todo, error) {
-	rows, err := q.db.Query(ctx, listTodos, userID)
+func (q *Queries) HabitTotalQ(ctx context.Context, userID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, habitTotalQ, userID)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
+const listCheckinsForDay = `-- name: ListCheckinsForDay :many
+
+SELECT user_id, habit_id, day, stars_q
+FROM checkins
+WHERE user_id = $1 AND day = $2
+`
+
+type ListCheckinsForDayParams struct {
+	UserID uuid.UUID   `json:"userId"`
+	Day    pgtype.Date `json:"day"`
+}
+
+// Check-ins.
+func (q *Queries) ListCheckinsForDay(ctx context.Context, arg ListCheckinsForDayParams) ([]Checkin, error) {
+	rows, err := q.db.Query(ctx, listCheckinsForDay, arg.UserID, arg.Day)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Todo
+	var items []Checkin
 	for rows.Next() {
-		var i Todo
+		var i Checkin
 		if err := rows.Scan(
-			&i.ID,
 			&i.UserID,
-			&i.Title,
-			&i.Done,
+			&i.HabitID,
+			&i.Day,
+			&i.StarsQ,
 		); err != nil {
 			return nil, err
 		}
@@ -164,25 +240,103 @@ func (q *Queries) ListTodos(ctx context.Context, userID uuid.UUID) ([]Todo, erro
 	return items, nil
 }
 
-const updateTodo = `-- name: UpdateTodo :exec
-UPDATE todos
-SET title = $3, done = $4
-WHERE id = $1 AND user_id = $2
+const listHabits = `-- name: ListHabits :many
+
+SELECT id, user_id, name, weight_q, deleted_at, created_at
+FROM habits
+WHERE user_id = $1 AND deleted_at IS NULL
+ORDER BY id
 `
 
-type UpdateTodoParams struct {
-	ID     int64     `json:"id"`
-	UserID uuid.UUID `json:"userId"`
-	Title  string    `json:"title"`
-	Done   bool      `json:"done"`
+// Habits (alive only: deleted_at IS NULL).
+func (q *Queries) ListHabits(ctx context.Context, userID uuid.UUID) ([]Habit, error) {
+	rows, err := q.db.Query(ctx, listHabits, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Habit
+	for rows.Next() {
+		var i Habit
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Name,
+			&i.WeightQ,
+			&i.DeletedAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
-func (q *Queries) UpdateTodo(ctx context.Context, arg UpdateTodoParams) error {
-	_, err := q.db.Exec(ctx, updateTodo,
+const setDayZero = `-- name: SetDayZero :exec
+UPDATE users
+SET day_zero = $2
+WHERE id = $1
+`
+
+type SetDayZeroParams struct {
+	ID      uuid.UUID   `json:"id"`
+	DayZero pgtype.Date `json:"dayZero"`
+}
+
+func (q *Queries) SetDayZero(ctx context.Context, arg SetDayZeroParams) error {
+	_, err := q.db.Exec(ctx, setDayZero, arg.ID, arg.DayZero)
+	return err
+}
+
+const softDeleteHabit = `-- name: SoftDeleteHabit :exec
+UPDATE habits
+SET deleted_at = now()
+WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+`
+
+type SoftDeleteHabitParams struct {
+	ID     int64     `json:"id"`
+	UserID uuid.UUID `json:"userId"`
+}
+
+func (q *Queries) SoftDeleteHabit(ctx context.Context, arg SoftDeleteHabitParams) error {
+	_, err := q.db.Exec(ctx, softDeleteHabit, arg.ID, arg.UserID)
+	return err
+}
+
+const updateHabit = `-- name: UpdateHabit :one
+UPDATE habits
+SET name = $3, weight_q = $4
+WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+RETURNING id, user_id, name, weight_q, deleted_at, created_at
+`
+
+type UpdateHabitParams struct {
+	ID      int64     `json:"id"`
+	UserID  uuid.UUID `json:"userId"`
+	Name    string    `json:"name"`
+	WeightQ int32     `json:"weightQ"`
+}
+
+func (q *Queries) UpdateHabit(ctx context.Context, arg UpdateHabitParams) (Habit, error) {
+	row := q.db.QueryRow(ctx, updateHabit,
 		arg.ID,
 		arg.UserID,
-		arg.Title,
-		arg.Done,
+		arg.Name,
+		arg.WeightQ,
 	)
-	return err
+	var i Habit
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Name,
+		&i.WeightQ,
+		&i.DeletedAt,
+		&i.CreatedAt,
+	)
+	return i, err
 }

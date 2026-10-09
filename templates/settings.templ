@@ -1,0 +1,102 @@
+package templates
+
+import (
+	"strconv"
+
+	"github.com/antoni-ostrowski/habit-tracker/internal/habit"
+)
+
+func habitIDStr(id int64) string {
+	return strconv.FormatInt(id, 10)
+}
+
+// SettingsPage is FULL page. Only GET /settings uses it.
+templ SettingsPage(d habit.SettingsData, username string) {
+	@Layout("settings", username) {
+		<main class="mx-auto max-w-3xl px-4 py-6">
+			<h1 class="text-lg font-bold">settings</h1>
+			@SettingsBody(d)
+		</main>
+	}
+}
+
+// SettingsBody is FRAGMENT (id="settings-body"). Every settings mutation
+// returns the whole body: no stale cross-sections, one swap target.
+templ SettingsBody(d habit.SettingsData) {
+	<div id="settings-body">
+		if d.Err != "" {
+			<p role="alert" class="mt-4 border-2 border-red-500 px-3 py-2 font-mono text-sm text-red-400">{ d.Err }</p>
+		}
+		@HabitsSection(d)
+		@StartSection(d)
+	</div>
+}
+
+templ HabitsSection(d habit.SettingsData) {
+	<section class="mt-6">
+		<div class="flex items-center justify-between border-b-2 border-neutral-800 px-3 py-2">
+			<h2 class="text-sm font-bold">habits</h2>
+			<span class="font-mono text-xs text-neutral-400">list total { habit.FormatQ(d.HabitTotalQ) } / 5</span>
+		</div>
+		<form hx-post="/habits" hx-target="#settings-body" hx-swap="innerHTML" hx-on::after-request="if(event.detail.successful) this.reset()" class="flex gap-0 border-b-2 border-neutral-800">
+			<input name="name" placeholder="new habit" required autocomplete="off" class="min-w-0 flex-1 border-r-2 border-neutral-800 bg-transparent px-3 py-2 text-sm outline-none placeholder:text-neutral-600 focus:bg-neutral-900"/>
+			<input name="weight" placeholder="★" required inputmode="decimal" autocomplete="off" title="stars, 0.25 steps" class="w-20 border-r-2 border-neutral-800 bg-transparent px-3 py-2 text-center font-mono text-base outline-none placeholder:text-neutral-400 focus:bg-neutral-900"/>
+			<button type="submit" class="bg-neutral-100 px-3 text-sm font-bold text-black hover:bg-[#00B4D8]">add</button>
+		</form>
+		if len(d.Habits) == 0 {
+			<p class="px-4 py-4 font-mono text-sm text-neutral-500">no habits yet.</p>
+		} else {
+			<ul class="divide-y-2 divide-neutral-800">
+				for _, h := range d.Habits {
+					<li x-data="{ open: false }">
+						<div class="flex items-center gap-3 px-3 py-2" x-show="!open">
+							<span class="flex-1 text-sm font-bold tracking-wide">{ h.Name }</span>
+							<span class="font-mono text-base font-bold text-neutral-100">{ habit.FormatQ(h.WeightQ) }<span class="text-xl text-[#00B4D8]">★</span></span>
+							<button type="button" @click="open = true" class="border-2 border-neutral-800 px-2 py-1 font-mono text-xs text-neutral-400 hover:border-neutral-100 hover:text-neutral-100">edit</button>
+							<button
+								hx-delete={ "/habits/" + habitIDStr(h.ID) }
+								hx-target="#settings-body"
+								hx-swap="innerHTML"
+								hx-confirm={ "delete habit \"" + h.Name + "\"? history stays." }
+								class="border-2 border-neutral-800 px-2 py-1 font-mono text-xs text-red-400 hover:border-red-500"
+							>del</button>
+						</div>
+						<form
+							hx-post={ "/habits/" + habitIDStr(h.ID) }
+							hx-target="#settings-body"
+							hx-swap="innerHTML"
+							x-show="open"
+							class="flex gap-0 border-t-2 border-[#00B4D8]"
+						>
+							<input name="name" value={ h.Name } required autocomplete="off" class="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm outline-none focus:bg-neutral-900"/>
+							<input name="weight" value={ habit.FormatQ(h.WeightQ) } required inputmode="decimal" autocomplete="off" class="w-20 border-l-2 border-neutral-800 bg-transparent px-3 py-2 font-mono text-base outline-none focus:bg-neutral-900"/>
+							<button type="submit" class="bg-[#00B4D8] px-4 text-sm font-bold text-black">save</button>
+							<button type="button" @click="open = false" class="border-l-2 border-neutral-800 px-4 text-sm font-bold text-neutral-400">X</button>
+						</form>
+					</li>
+				}
+			</ul>
+		}
+	</section>
+}
+
+// StartSection owns day zero: the date counting starts from. Labels
+// recalc on change; logged scores never move.
+templ StartSection(d habit.SettingsData) {
+	<section class="mt-6">
+		<div class="border-b-2 border-neutral-800 px-3 py-2">
+			<h2 class="text-sm font-bold">tracking start</h2>
+		</div>
+		<div class="px-3 py-2">
+			if d.DayZero.Valid {
+				<p class="font-mono text-sm text-neutral-300">day 0 = { d.DayZero.Time.Format("Mon 2 Jan 2006") }</p>
+			} else {
+				<p class="font-mono text-sm text-neutral-500">not set — pick a date or hit set as day 0 on today.</p>
+			}
+			<form hx-post="/day-zero" hx-target="#settings-body" hx-swap="innerHTML" class="mt-3 flex gap-0 border-2 border-neutral-800">
+				<input type="date" name="day" required class="min-w-0 flex-1 bg-transparent px-3 py-2 font-mono text-sm outline-none [color-scheme:dark]"/>
+				<button type="submit" class="bg-neutral-100 px-3 text-sm font-bold text-black hover:bg-[#00B4D8]">set</button>
+			</form>
+		</div>
+	</section>
+}

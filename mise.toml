@@ -29,13 +29,13 @@ run = "go test -race ./..."
 description = "Run PostgreSQL integration tests (auto-starts and cleans up disposable container on :5433)"
 run = """
 docker rm -f habit-tracker-test-db >/dev/null 2>&1 || true
-docker run --rm -d --name habit-tracker-test-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=todos -p 5433:5432 postgres:16-alpine -c synchronous_commit=off
+docker run --rm -d --name habit-tracker-test-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=habits -p 5433:5432 postgres:16-alpine -c synchronous_commit=off
 trap 'docker rm -f habit-tracker-test-db >/dev/null 2>&1' EXIT
 for i in $(seq 1 30); do
-  docker exec habit-tracker-test-db pg_isready -U postgres -d todos >/dev/null 2>&1 && break
+  docker exec habit-tracker-test-db pg_isready -U postgres -d habits >/dev/null 2>&1 && break
   sleep 1
 done
-DATABASE_URL=postgres://postgres:postgres@localhost:5433/todos?sslmode=disable INTEGRATION_TESTS=1 go test ./internal/integration -v
+DATABASE_URL=postgres://postgres:postgres@localhost:5433/habits?sslmode=disable INTEGRATION_TESTS=1 go test ./internal/integration -v
 """
 
 [tasks.check]
@@ -46,11 +46,11 @@ run = "go vet ./... && go test ./..."
 [tasks.db-apply]
 description = "Apply desired schema to dev database (sqldef, declarative)"
 depends = ["db"]
-run = "PGPASSWORD=postgres PGSSLMODE=disable psqldef -U postgres -h 127.0.0.1 -p 5432 todos --apply --enable-drop --file internal/db/schema.sql"
+run = "PGPASSWORD=postgres PGSSLMODE=disable psqldef -U postgres -h 127.0.0.1 -p 5432 habits --apply --enable-drop --file internal/db/schema.sql"
 
 [tasks.db-plan]
 description = "Show planned schema changes without applying"
-run = "PGPASSWORD=postgres PGSSLMODE=disable psqldef -U postgres -h 127.0.0.1 -p 5432 todos --dry-run --file internal/db/schema.sql"
+run = "PGPASSWORD=postgres PGSSLMODE=disable psqldef -U postgres -h 127.0.0.1 -p 5432 habits --dry-run --file internal/db/schema.sql"
 
 [tasks.db-validate]
 description = "Validate schema (offline parse + idempotency check)"
@@ -62,12 +62,12 @@ run = """
 if ! docker ps -q --filter "name=^habit-tracker-dev-db$" | grep -q .; then
   docker rm -f habit-tracker-dev-db >/dev/null 2>&1 || true
   docker run --rm -d --name habit-tracker-dev-db \
-    -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=todos \
+    -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=habits \
     -p 5432:5432 postgres:16-alpine -c synchronous_commit=off
 fi
 for i in $(seq 1 30); do
-  if docker exec habit-tracker-dev-db pg_isready -U postgres -d todos >/dev/null 2>&1; then
-    echo "dev db ready on localhost:5432 (postgres/postgres, db: todos)"
+  if docker exec habit-tracker-dev-db pg_isready -U postgres -d habits >/dev/null 2>&1; then
+    echo "dev db ready on localhost:5432 (postgres/postgres, db: habits)"
     exit 0
   fi
   sleep 1

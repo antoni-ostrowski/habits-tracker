@@ -22,7 +22,7 @@ func TestSmoke_RunServes(t *testing.T) {
 
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		databaseURL = "postgres://postgres:postgres@localhost:5432/todos?sslmode=disable"
+		databaseURL = "postgres://postgres:postgres@localhost:5432/habits?sslmode=disable"
 	}
 	prev := slog.Default()
 	defer slog.SetDefault(prev)
@@ -56,7 +56,7 @@ func TestSmoke_RunServes(t *testing.T) {
 	if body == "" {
 		t.Fatal("server never became ready")
 	}
-	for _, want := range []string{"no todos yet", "/signin"} {
+	for _, want := range []string{"sign in", "/signin"} {
 		if !strings.Contains(body, want) {
 			t.Fatalf("body missing %q:\n%s", want, body)
 		}

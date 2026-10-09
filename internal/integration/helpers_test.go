@@ -35,7 +35,7 @@ func Pool(t *testing.T, schemaFile string) *pgxpool.Pool {
 	poolOnce.Do(func() {
 		databaseURL := os.Getenv("DATABASE_URL")
 		if databaseURL == "" {
-			databaseURL = "postgres://postgres:postgres@localhost:5432/todos?sslmode=disable"
+			databaseURL = "postgres://postgres:postgres@localhost:5432/habits?sslmode=disable"
 		}
 		tstPool, tstErr = pgxpool.New(ctx, databaseURL)
 		if tstErr != nil {
@@ -49,7 +49,7 @@ func Pool(t *testing.T, schemaFile string) *pgxpool.Pool {
 			tstErr = err
 			return
 		}
-		if _, tstErr = tstPool.Exec(ctx, "DROP TABLE IF EXISTS todos, sessions, users;"+string(schema)); tstErr != nil {
+		if _, tstErr = tstPool.Exec(ctx, "DROP TABLE IF EXISTS checkins, habits, sessions, users;"+string(schema)); tstErr != nil {
 			return
 		}
 	})

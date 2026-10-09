@@ -9,22 +9,32 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Checkin struct {
+	UserID  uuid.UUID   `json:"userId"`
+	HabitID int64       `json:"habitId"`
+	Day     pgtype.Date `json:"day"`
+	StarsQ  int32       `json:"starsQ"`
+}
+
+type Habit struct {
+	ID        int64              `json:"id"`
+	UserID    uuid.UUID          `json:"userId"`
+	Name      string             `json:"name"`
+	WeightQ   int32              `json:"weightQ"`
+	DeletedAt pgtype.Timestamptz `json:"deletedAt"`
+	CreatedAt pgtype.Timestamptz `json:"createdAt"`
+}
+
 type Session struct {
 	Token  string             `json:"token"`
 	Data   []byte             `json:"data"`
 	Expiry pgtype.Timestamptz `json:"expiry"`
 }
 
-type Todo struct {
-	ID     int64     `json:"id"`
-	UserID uuid.UUID `json:"userId"`
-	Title  string    `json:"title"`
-	Done   bool      `json:"done"`
-}
-
 type User struct {
 	ID           uuid.UUID          `json:"id"`
 	Username     string             `json:"username"`
 	PasswordHash string             `json:"passwordHash"`
+	DayZero      pgtype.Date        `json:"dayZero"`
 	CreatedAt    pgtype.Timestamptz `json:"createdAt"`
 }
