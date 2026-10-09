@@ -42,19 +42,19 @@ func Signup(errMsg string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"mx-auto max-w-md px-4 py-10\"><h1 class=\"text-2xl font-semibold tracking-tight\">sign up</h1>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"mx-auto max-w-md px-4 py-10\"><h1 class=\"text-lg font-bold\">sign up</h1>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if errMsg != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p class=\"mt-4 text-sm text-red-600\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p role=\"alert\" class=\"mt-4 border-2 border-red-500 px-3 py-1.5 font-mono text-sm text-red-400\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var3 string
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(errMsg)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/auth.templ`, Line: 9, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/auth.templ`, Line: 9, Col: 108}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
@@ -65,13 +65,13 @@ func Signup(errMsg string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<form method=\"post\" action=\"/signup\" class=\"mt-4 flex flex-col gap-2\"><input name=\"username\" placeholder=\"username\" required autocomplete=\"username\" class=\"rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none\"> <input name=\"password\" type=\"password\" placeholder=\"password (min 8 characters)\" required autocomplete=\"new-password\" class=\"rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none\"> <button type=\"submit\" class=\"rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700\">Sign up</button></form><p class=\"mt-4 text-sm text-neutral-500\">already have an account? <a href=\"/signin\" class=\"underline\">sign in</a></p></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<form method=\"post\" action=\"/signup\" class=\"mt-4 flex flex-col gap-2\"><input name=\"username\" placeholder=\"username\" required autocomplete=\"username\" class=\"border-2 border-neutral-800 bg-transparent px-3 py-1.5 text-sm outline-none placeholder:text-neutral-600 focus:border-neutral-100\"> <input name=\"password\" type=\"password\" placeholder=\"password (min 8)\" required autocomplete=\"new-password\" class=\"border-2 border-neutral-800 bg-transparent px-3 py-1.5 text-sm outline-none placeholder:text-neutral-600 focus:border-neutral-100\"> <button type=\"submit\" class=\"bg-neutral-100 px-3 py-1.5 text-sm font-bold text-black hover:bg-[#00B4D8]\">sign up</button></form><p class=\"mt-4 font-mono text-sm text-neutral-500\">have account? <a href=\"/signin\" class=\"font-bold text-neutral-100 underline\">sign in</a></p></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = Layout("sign up").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = Layout("sign up", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -113,19 +113,19 @@ func Signin(errMsg string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<main class=\"mx-auto max-w-md px-4 py-10\"><h1 class=\"text-2xl font-semibold tracking-tight\">sign in</h1>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<main class=\"mx-auto max-w-md px-4 py-10\"><h1 class=\"text-lg font-bold\">sign in</h1>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if errMsg != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<p class=\"mt-4 text-sm text-red-600\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<p role=\"alert\" class=\"mt-4 border-2 border-red-500 px-3 py-1.5 font-mono text-sm text-red-400\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(errMsg)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/auth.templ`, Line: 27, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/auth.templ`, Line: 27, Col: 108}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -136,13 +136,13 @@ func Signin(errMsg string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<form method=\"post\" action=\"/signin\" class=\"mt-4 flex flex-col gap-2\"><input name=\"username\" placeholder=\"username\" required autocomplete=\"username\" class=\"rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none\"> <input name=\"password\" type=\"password\" placeholder=\"password\" required autocomplete=\"current-password\" class=\"rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none\"> <button type=\"submit\" class=\"rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700\">Sign in</button></form><p class=\"mt-4 text-sm text-neutral-500\">no account yet? <a href=\"/signup\" class=\"underline\">sign up</a></p></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<form method=\"post\" action=\"/signin\" class=\"mt-4 flex flex-col gap-2\"><input name=\"username\" placeholder=\"username\" required autocomplete=\"username\" class=\"border-2 border-neutral-800 bg-transparent px-3 py-1.5 text-sm outline-none placeholder:text-neutral-600 focus:border-neutral-100\"> <input name=\"password\" type=\"password\" placeholder=\"password\" required autocomplete=\"current-password\" class=\"border-2 border-neutral-800 bg-transparent px-3 py-1.5 text-sm outline-none placeholder:text-neutral-600 focus:border-neutral-100\"> <button type=\"submit\" class=\"bg-neutral-100 px-3 py-1.5 text-sm font-bold text-black hover:bg-[#00B4D8]\">sign in</button></form><p class=\"mt-4 font-mono text-sm text-neutral-500\">no account? <a href=\"/signup\" class=\"font-bold text-neutral-100 underline\">sign up</a></p></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = Layout("sign in").Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = Layout("sign in", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

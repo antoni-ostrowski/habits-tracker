@@ -9,9 +9,9 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 // Layout is the single page shell every full page renders through:
-// doctype, head, stylesheet, htmx, and the bfcache reload guard.
-// Cross-page behavior lives here once, not per page.
-func Layout(title string) templ.Component {
+// doctype, head, stylesheet, htmx + alpine, bfcache reload guard, top nav.
+// Nav links are htmx-boosted (AJAX + body swap). username "" = anonymous.
+func Layout(title string, username string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -45,7 +45,35 @@ func Layout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " - todos</title><link rel=\"stylesheet\" href=\"/static/css/app.css\"><script src=\"/static/js/htmx.min.js\"></script><script>window.addEventListener(\"pageshow\", function (e) { if (e.persisted) window.location.reload(); });</script></head><body class=\"bg-neutral-100 font-sans text-neutral-900 antialiased\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " — habit tracker</title><link rel=\"stylesheet\" href=\"/static/css/app.css\"><script src=\"/static/js/htmx.min.js\"></script><script defer src=\"/static/js/alpine.min.js\"></script><script>window.addEventListener(\"pageshow\", function (e) { if (e.persisted) window.location.reload(); });</script></head><body class=\"bg-neutral-950 font-mono text-neutral-100 antialiased\"><header class=\"border-b-2 border-neutral-800\"><nav class=\"mx-auto flex max-w-3xl items-stretch gap-0 px-4\"><span class=\"flex items-center border-r-2 border-neutral-800 pr-3 font-mono text-sm font-bold text-[#00B4D8]\">habits★</span> <a href=\"/\" hx-boost=\"true\" class=\"flex items-center px-3 py-3 text-sm font-bold hover:bg-neutral-900\">today</a> ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if username != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<a href=\"/settings\" hx-boost=\"true\" class=\"flex items-center px-3 py-3 text-sm font-bold hover:bg-neutral-900\">settings</a> <span class=\"ml-auto flex items-center px-3 py-3 font-mono text-xs text-neutral-500\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 string
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(username)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/layout.templ`, Line: 25, Col: 101}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</span><form method=\"post\" action=\"/signout\" class=\"flex items-center\"><button type=\"submit\" class=\"px-3 py-3 text-sm font-bold text-neutral-400 hover:bg-neutral-900 hover:text-neutral-100\">sign out</button></form>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<a href=\"/signin\" class=\"ml-auto flex items-center px-3 py-3 text-sm font-bold hover:bg-neutral-900\">sign in</a>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</nav></header>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -53,7 +81,7 @@ func Layout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

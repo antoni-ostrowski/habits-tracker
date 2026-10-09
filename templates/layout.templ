@@ -1,20 +1,36 @@
 package templates
 
 // Layout is the single page shell every full page renders through:
-// doctype, head, stylesheet, htmx, and the bfcache reload guard.
-// Cross-page behavior lives here once, not per page.
-templ Layout(title string) {
+// doctype, head, stylesheet, htmx + alpine, bfcache reload guard, top nav.
+// Nav links are htmx-boosted (AJAX + body swap). username "" = anonymous.
+templ Layout(title string, username string) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>{ title } - todos</title>
+			<title>{ title } — habit tracker</title>
 			<link rel="stylesheet" href="/static/css/app.css"/>
 			<script src="/static/js/htmx.min.js"></script>
+			<script defer src="/static/js/alpine.min.js"></script>
 			<script>window.addEventListener("pageshow", function (e) { if (e.persisted) window.location.reload(); });</script>
 		</head>
-		<body class="bg-neutral-100 font-sans text-neutral-900 antialiased">
+		<body class="bg-neutral-950 font-mono text-neutral-100 antialiased">
+			<header class="border-b-2 border-neutral-800">
+				<nav class="mx-auto flex max-w-3xl items-stretch gap-0 px-4">
+					<span class="flex items-center border-r-2 border-neutral-800 pr-3 font-mono text-sm font-bold text-[#00B4D8]">habits★</span>
+					<a href="/" hx-boost="true" class="flex items-center px-3 py-3 text-sm font-bold hover:bg-neutral-900">today</a>
+					if username != "" {
+						<a href="/settings" hx-boost="true" class="flex items-center px-3 py-3 text-sm font-bold hover:bg-neutral-900">settings</a>
+						<span class="ml-auto flex items-center px-3 py-3 font-mono text-xs text-neutral-500">{ username }</span>
+						<form method="post" action="/signout" class="flex items-center">
+							<button type="submit" class="px-3 py-3 text-sm font-bold text-neutral-400 hover:bg-neutral-900 hover:text-neutral-100">sign out</button>
+						</form>
+					} else {
+						<a href="/signin" class="ml-auto flex items-center px-3 py-3 text-sm font-bold hover:bg-neutral-900">sign in</a>
+					}
+				</nav>
+			</header>
 			{ children... }
 		</body>
 	</html>

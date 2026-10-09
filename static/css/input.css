@@ -1,3 +1,25 @@
 @import "tailwindcss";
 
 @source "../../templates";
+
+/* Source Code Pro, self-hosted variable fonts (see static/fonts/OFL.txt). */
+@font-face {
+  font-family: "Source Code Pro";
+  src: url("/static/fonts/SourceCodePro-VariableFont_wght.ttf") format("truetype");
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Source Code Pro";
+  src: url("/static/fonts/SourceCodePro-Italic-VariableFont_wght.ttf") format("truetype");
+  font-weight: 200 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Mono everywhere font-mono is used: Source Code Pro first, system mono fallback. */
+@theme {
+  --font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, monospace;
+}

@@ -16,8 +16,8 @@ import (
 	db "github.com/antoni-ostrowski/habit-tracker/internal/db/sqlc"
 	"github.com/antoni-ostrowski/habit-tracker/internal/handlers"
 	"github.com/antoni-ostrowski/habit-tracker/internal/handlers/auth"
+	"github.com/antoni-ostrowski/habit-tracker/internal/handlers/habits"
 	"github.com/antoni-ostrowski/habit-tracker/internal/handlers/static"
-	"github.com/antoni-ostrowski/habit-tracker/internal/handlers/todo"
 	"github.com/antoni-ostrowski/habit-tracker/internal/obs"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -112,7 +112,7 @@ func NewServer(d handlers.Deps, staticDir, addr string) *http.Server {
 // in prod, the test tree path in tests.
 func NewHandler(d handlers.Deps, staticDir string) http.Handler {
 	mux := http.NewServeMux()
-	todo.Register(mux, d)
+	habits.Register(mux, d)
 	auth.Register(mux, d)
 	static.Register(mux, staticDir)
 	return otelhttp.NewHandler(d.Sessions.LoadAndSave(mux), "server")

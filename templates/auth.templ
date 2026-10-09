@@ -2,36 +2,36 @@ package templates
 
 // Signup is FULL page. POST /signup re-renders it with errMsg on failure.
 templ Signup(errMsg string) {
-	@Layout("sign up") {
+	@Layout("sign up", "") {
 		<main class="mx-auto max-w-md px-4 py-10">
-			<h1 class="text-2xl font-semibold tracking-tight">sign up</h1>
+			<h1 class="text-lg font-bold">sign up</h1>
 			if errMsg != "" {
-				<p class="mt-4 text-sm text-red-600">{ errMsg }</p>
+				<p role="alert" class="mt-4 border-2 border-red-500 px-3 py-1.5 font-mono text-sm text-red-400">{ errMsg }</p>
 			}
 			<form method="post" action="/signup" class="mt-4 flex flex-col gap-2">
-				<input name="username" placeholder="username" required autocomplete="username" class="rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"/>
-				<input name="password" type="password" placeholder="password (min 8 characters)" required autocomplete="new-password" class="rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"/>
-				<button type="submit" class="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700">Sign up</button>
+				<input name="username" placeholder="username" required autocomplete="username" class="border-2 border-neutral-800 bg-transparent px-3 py-1.5 text-sm outline-none placeholder:text-neutral-600 focus:border-neutral-100"/>
+				<input name="password" type="password" placeholder="password (min 8)" required autocomplete="new-password" class="border-2 border-neutral-800 bg-transparent px-3 py-1.5 text-sm outline-none placeholder:text-neutral-600 focus:border-neutral-100"/>
+				<button type="submit" class="bg-neutral-100 px-3 py-1.5 text-sm font-bold text-black hover:bg-[#00B4D8]">sign up</button>
 			</form>
-			<p class="mt-4 text-sm text-neutral-500">already have an account? <a href="/signin" class="underline">sign in</a></p>
+			<p class="mt-4 font-mono text-sm text-neutral-500">have account? <a href="/signin" class="font-bold text-neutral-100 underline">sign in</a></p>
 		</main>
 	}
 }
 
 // Signin is FULL page. POST /signin re-renders it with errMsg on failure.
 templ Signin(errMsg string) {
-	@Layout("sign in") {
+	@Layout("sign in", "") {
 		<main class="mx-auto max-w-md px-4 py-10">
-			<h1 class="text-2xl font-semibold tracking-tight">sign in</h1>
+			<h1 class="text-lg font-bold">sign in</h1>
 			if errMsg != "" {
-				<p class="mt-4 text-sm text-red-600">{ errMsg }</p>
+				<p role="alert" class="mt-4 border-2 border-red-500 px-3 py-1.5 font-mono text-sm text-red-400">{ errMsg }</p>
 			}
 			<form method="post" action="/signin" class="mt-4 flex flex-col gap-2">
-				<input name="username" placeholder="username" required autocomplete="username" class="rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"/>
-				<input name="password" type="password" placeholder="password" required autocomplete="current-password" class="rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"/>
-				<button type="submit" class="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700">Sign in</button>
+				<input name="username" placeholder="username" required autocomplete="username" class="border-2 border-neutral-800 bg-transparent px-3 py-1.5 text-sm outline-none placeholder:text-neutral-600 focus:border-neutral-100"/>
+				<input name="password" type="password" placeholder="password" required autocomplete="current-password" class="border-2 border-neutral-800 bg-transparent px-3 py-1.5 text-sm outline-none placeholder:text-neutral-600 focus:border-neutral-100"/>
+				<button type="submit" class="bg-neutral-100 px-3 py-1.5 text-sm font-bold text-black hover:bg-[#00B4D8]">sign in</button>
 			</form>
-			<p class="mt-4 text-sm text-neutral-500">no account yet? <a href="/signup" class="underline">sign up</a></p>
+			<p class="mt-4 font-mono text-sm text-neutral-500">no account? <a href="/signup" class="font-bold text-neutral-100 underline">sign up</a></p>
 		</main>
 	}
 }

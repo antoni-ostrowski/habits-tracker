@@ -73,7 +73,7 @@ func seedUser(t *testing.T, username string) uuid.UUID {
 func setup(t *testing.T) (http.Handler, *db.Queries, *scs.SessionManager, uuid.UUID) {
 	t.Helper()
 	p := Pool(t, schemaFile)
-	Truncate(t, p, "todos", "sessions", "users")
+	Truncate(t, p, "checkins", "habits", "sessions", "users")
 	user := seedUser(t, "")
 	q := db.New(p)
 	sessions := auth.NewSessionManager(p)
@@ -85,14 +85,4 @@ func setup(t *testing.T) (http.Handler, *db.Queries, *scs.SessionManager, uuid.U
 		Tel:      &handlers.Telemetry{Tracer: otel.Tracer("test"), Meter: otel.Meter("test")},
 	}
 	return server.NewHandler(d, "../../static"), q, sessions, user
-}
-
-// listDB reads the user's todos to prove stored state, not just HTML.
-func listDB(t *testing.T, q *db.Queries, user uuid.UUID) []db.Todo {
-	t.Helper()
-	todos, err := q.ListTodos(context.Background(), user)
-	if err != nil {
-		t.Fatalf("ListTodos: %v", err)
-	}
-	return todos
 }

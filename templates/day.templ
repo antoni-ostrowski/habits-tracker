@@ -1,0 +1,138 @@
+package templates
+
+import (
+	"fmt"
+
+	"github.com/antoni-ostrowski/habit-tracker/internal/habit"
+)
+
+// WeekDay is one cell of the week strip. Computed by the handler.
+type WeekDay struct {
+	ISO        string // 2006-01-02, links ?date=
+	Dow        string // MON
+	Dom        string // 6
+	IsToday    bool
+	IsSelected bool
+}
+
+func starPct(q int32) string {
+	return fmt.Sprintf("%.1f%%", float64(q)/float64(habit.DayTotalQ)*100)
+}
+
+// StarBar is a 5-star meter with quarter-star precision: grey stars
+// behind, blue clipped on top. Pure CSS, no JS.
+templ StarBar(totalQ int32) {
+	<span class="inline-flex items-center gap-2">
+		<span class="relative inline-block whitespace-nowrap text-xl leading-none">
+			<span class="text-neutral-700">★★★★★</span>
+			<span class="absolute inset-0 overflow-hidden whitespace-nowrap text-[#00B4D8]" style={ "width: " + starPct(totalQ) }>★★★★★</span>
+		</span>
+		<span class="font-mono text-sm text-neutral-300">{ habit.FormatQ(totalQ) } / 5</span>
+	</span>
+}
+
+// DayPage is FULL page. Only GET / uses it.
+templ DayPage(v habit.DayView, week []WeekDay, username string) {
+	@Layout("today", username) {
+		<main class="mx-auto max-w-3xl px-4 py-6">
+			@WeekStrip(week)
+			@DayPanel(v)
+		</main>
+	}
+}
+
+// AnonymousDay is FULL page for signed-out GET /.
+templ AnonymousDay() {
+	@Layout("today", "") {
+		<main class="mx-auto max-w-3xl px-4 py-6">
+			<div class="border-2 border-neutral-800 p-6">
+				<p class="text-sm tracking-wide text-neutral-400"><a href="/signin" class="font-bold text-neutral-100 underline">sign in</a> or <a href="/signup" class="font-bold text-neutral-100 underline">sign up</a> to track habits.</p>
+			</div>
+		</main>
+	}
+}
+
+// WeekStrip is the Mon-Sun navigator. Links are htmx-boosted via nav? No:
+// plain boosted anchors, full-page swap handled by htmx boost.
+templ WeekStrip(week []WeekDay) {
+	<nav class="grid grid-cols-7 border-2 border-neutral-800" aria-label="week">
+		for _, d := range week {
+			<a
+				href={ "/?date=" + d.ISO }
+				hx-boost="true"
+				class={ "flex flex-col items-center border-neutral-800 py-2 [&:not(:last-child)]:border-r-2",
+					templ.KV("bg-[#00B4D8] text-black", d.IsSelected),
+					templ.KV("text-neutral-100 hover:bg-neutral-900", !d.IsSelected) }
+			>
+				<span class="font-mono text-[10px]">{ d.Dow }</span>
+				<span class="font-mono text-lg font-bold">{ d.Dom }</span>
+				if d.IsToday {
+					<span class="font-mono text-[10px]">●</span>
+				}
+			</a>
+		}
+	</nav>
+}
+
+// DayPanel is FRAGMENT (id="day-panel"). Toggle handler returns this,
+// htmx swaps it. Read-only unless the day is today.
+templ DayPanel(v habit.DayView) {
+	<section id="day-panel" class="mt-4 border-2 border-neutral-800">
+		<div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-neutral-800 px-4 py-3">
+			<div class="flex items-center gap-3">
+				<h1 class="text-lg font-bold tracking-wide">{ v.Day.Format("Mon 2 Jan 2006") }</h1>
+				if v.DayNumber != nil {
+					<span class="bg-[#00B4D8] px-2 py-0.5 font-mono text-xs font-bold text-black">day { fmt.Sprintf("%d", *v.DayNumber) }</span>
+				}
+			</div>
+			@StarBar(v.TotalQ)
+		</div>
+		if len(v.Habits) == 0 {
+			<p class="px-4 py-6 font-mono text-sm text-neutral-500">no habits yet — add some in settings.</p>
+		} else {
+			<ul class="divide-y-2 divide-neutral-800">
+				for _, h := range v.Habits {
+					<li>
+						if v.Editable {
+							<form hx-post="/checkins/toggle" hx-trigger="change" hx-target="#day-panel" hx-swap="innerHTML">
+								<input type="hidden" name="habit_id" value={ fmt.Sprintf("%d", h.Habit.ID) }/>
+								<input type="hidden" name="day" value={ v.Day.Format("2006-01-02") }/>
+								<label class="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-neutral-900">
+									<input
+										type="checkbox"
+										name="done"
+										checked?={ h.Checked }
+										class="h-6 w-6 shrink-0 cursor-pointer appearance-none border-2 border-neutral-100 bg-transparent checked:border-[#00B4D8] checked:bg-[#00B4D8]"
+									/>
+									<span class={ "flex-1 text-sm font-bold tracking-wide", templ.KV("text-neutral-500 line-through", h.Checked) }>{ h.Habit.Name }</span>
+									<span class="font-mono text-base font-bold text-neutral-200">+{ habit.FormatQ(h.StarsQ) }★</span>
+								</label>
+							</form>
+						} else {
+							<div class="flex items-center gap-3 px-4 py-3">
+								<span class="flex h-6 w-6 shrink-0 items-center justify-center border-2 font-mono text-sm">
+									if h.Checked {
+										<span class="text-[#00B4D8]">■</span>
+									} else {
+										<span class="text-neutral-700">□</span>
+									}
+								</span>
+								<span class="flex-1 text-sm font-bold tracking-wide text-neutral-400">{ h.Habit.Name }</span>
+								<span class="font-mono text-base font-bold text-neutral-500">+{ habit.FormatQ(h.StarsQ) }★</span>
+							</div>
+						}
+					</li>
+				}
+			</ul>
+		}
+		if !v.Editable {
+			<p class="border-t-2 border-neutral-800 px-4 py-2 font-mono text-[11px] text-neutral-600">read-only — only today is editable.</p>
+		} else if v.DayNumber == nil || *v.DayNumber != 0 {
+			<form hx-post="/day-zero" hx-target="#day-panel" hx-swap="innerHTML" class="border-t-2 border-neutral-800">
+				<input type="hidden" name="day" value={ v.Day.Format("2006-01-02") }/>
+				<input type="hidden" name="next" value="day"/>
+				<button type="submit" class="w-full px-3 py-1.5 font-mono text-[11px] text-neutral-400 hover:bg-neutral-900 hover:text-neutral-100">set as day 0 — start counting from today</button>
+			</form>
+		}
+	</section>
+}

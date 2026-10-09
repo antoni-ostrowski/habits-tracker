@@ -10,7 +10,7 @@ import (
 	"github.com/antoni-ostrowski/habit-tracker/internal/server"
 )
 
-const APP_NAME = "go-htmx-template"
+const APP_NAME = "habit-tracker"
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -18,7 +18,7 @@ func main() {
 
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		databaseURL = "postgres://postgres:postgres@localhost:5432/todos?sslmode=disable"
+		databaseURL = "postgres://postgres:postgres@localhost:5432/habits?sslmode=disable"
 	}
 	cfg := server.Config{
 		DatabaseURL: databaseURL,
