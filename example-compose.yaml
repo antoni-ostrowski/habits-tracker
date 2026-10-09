@@ -7,9 +7,6 @@ services:
       POSTGRES_DB: habits
     volumes:
       - habits_tracker_pgdata:/var/lib/postgresql/data
-      # internal/db/schema.sql is the schema source of truth; it seeds
-      # the fresh database on first boot (citext ships with the image).
-      - ./internal/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d habits"]
       interval: 2s
@@ -17,7 +14,7 @@ services:
       retries: 30
 
   app:
-    build: antost360/habits-tracker:latest
+    image: antost360/habits-tracker:latest
     ports:
       - "8080:8080"
     environment:

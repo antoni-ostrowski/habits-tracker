@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS citext;
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
 	id UUID PRIMARY KEY,
 	username TEXT UNIQUE NOT NULL,
 	password_hash TEXT NOT NULL,
@@ -8,19 +8,19 @@ CREATE TABLE users (
 	created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE sessions (
+CREATE TABLE IF NOT EXISTS sessions (
 	token TEXT PRIMARY KEY,
 	data BYTEA NOT NULL,
 	expiry TIMESTAMPTZ NOT NULL
 );
 
-CREATE INDEX sessions_expiry_idx ON sessions (expiry);
+CREATE INDEX IF NOT EXISTS sessions_expiry_idx ON sessions (expiry);
 
 -- Habits: one list per user, the whole day plan. weight_q is
 -- quarter-stars (4 = 1 star). Deleted habits keep their row
 -- (deleted_at set) so check-in history still joins to a name; only
 -- alive habits show in the day view.
-CREATE TABLE habits (
+CREATE TABLE IF NOT EXISTS habits (
   id BIGSERIAL PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -29,12 +29,12 @@ CREATE TABLE habits (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX habits_user_id_idx ON habits (user_id);
+CREATE INDEX IF NOT EXISTS habits_user_id_idx ON habits (user_id);
 
 -- Check-ins: one row per done habit per day. stars_q snapshots the
 -- habit's weight at check time, so later weight edits never rewrite
 -- history. Unchecking deletes the row.
-CREATE TABLE checkins (
+CREATE TABLE IF NOT EXISTS checkins (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   habit_id BIGINT NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
   day DATE NOT NULL,
@@ -42,4 +42,4 @@ CREATE TABLE checkins (
   PRIMARY KEY (user_id, habit_id, day)
 );
 
-CREATE INDEX checkins_user_day_idx ON checkins (user_id, day);
+CREATE INDEX IF NOT EXISTS checkins_user_day_idx ON checkins (user_id, day);

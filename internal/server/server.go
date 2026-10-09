@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/antoni-ostrowski/habit-tracker/internal/db"
 	db "github.com/antoni-ostrowski/habit-tracker/internal/db/sqlc"
 	"github.com/antoni-ostrowski/habit-tracker/internal/handlers"
 	"github.com/antoni-ostrowski/habit-tracker/internal/handlers/auth"
@@ -64,6 +65,12 @@ func Run(ctx context.Context, cfg Config) error {
 		return fmt.Errorf("create database pool: %w", err)
 	}
 	defer pool.Close()
+
+	// The image carries the schema: boot against an empty database works
+	// with no repo files around. Create-if-missing only, data untouched.
+	if err := schema.Migrate(context.Background(), pool); err != nil {
+		return err
+	}
 
 	sessions := auth.NewSessionManager(pool)
 	deps := handlers.Deps{
