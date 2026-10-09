@@ -1,0 +1,90 @@
+[tools]
+go = "1.27.0"
+sqlc = "1.30.0"
+"aqua:a-h/templ" = "v0.3.1020"
+"aqua:air-verse/air" = "v1.67.4"
+"aqua:sqldef/sqldef/psqldef" = "3.11.20"
+"github:tailwindlabs/tailwindcss" = "v4.3.3"
+
+[env]
+_.file = ".env.local"
+
+[tasks.generate]
+description = "Generate sqlc and templ code"
+run = "sqlc generate && templ generate"
+
+[tasks.css]
+description = "Build Tailwind CSS (minified, for prod builds)"
+run = "tailwindcss -i ./static/css/input.css -o ./static/css/app.css --minify"
+
+[tasks.test]
+description = "Run tests"
+run = "go test ./..."
+
+[tasks.test-race]
+description = "Run tests with race detector"
+run = "go test -race ./..."
+
+[tasks.test-int]
+description = "Run PostgreSQL integration tests (auto-starts and cleans up disposable container on :5433)"
+run = """
+docker rm -f habit-tracker-test-db >/dev/null 2>&1 || true
+docker run --rm -d --name habit-tracker-test-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=todos -p 5433:5432 postgres:16-alpine -c synchronous_commit=off
+trap 'docker rm -f habit-tracker-test-db >/dev/null 2>&1' EXIT
+for i in $(seq 1 30); do
+  docker exec habit-tracker-test-db pg_isready -U postgres -d todos >/dev/null 2>&1 && break
+  sleep 1
+done
+DATABASE_URL=postgres://postgres:postgres@localhost:5433/todos?sslmode=disable INTEGRATION_TESTS=1 go test ./internal/integration -v
+"""
+
+[tasks.check]
+description = "Run generators, vet, and tests"
+depends = ["generate"]
+run = "go vet ./... && go test ./..."
+
+[tasks.db-apply]
+description = "Apply desired schema to dev database (sqldef, declarative)"
+depends = ["db"]
+run = "PGPASSWORD=postgres PGSSLMODE=disable psqldef -U postgres -h 127.0.0.1 -p 5432 todos --apply --enable-drop --file internal/db/schema.sql"
+
+[tasks.db-plan]
+description = "Show planned schema changes without applying"
+run = "PGPASSWORD=postgres PGSSLMODE=disable psqldef -U postgres -h 127.0.0.1 -p 5432 todos --dry-run --file internal/db/schema.sql"
+
+[tasks.db-validate]
+description = "Validate schema (offline parse + idempotency check)"
+run = "psqldef internal/db/schema.sql --file internal/db/schema.sql"
+
+[tasks.db]
+description = "Start (or reuse) the local Postgres dev container"
+run = """
+if ! docker ps -q --filter "name=^habit-tracker-dev-db$" | grep -q .; then
+  docker rm -f habit-tracker-dev-db >/dev/null 2>&1 || true
+  docker run --rm -d --name habit-tracker-dev-db \
+    -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=todos \
+    -p 5432:5432 postgres:16-alpine -c synchronous_commit=off
+fi
+for i in $(seq 1 30); do
+  if docker exec habit-tracker-dev-db pg_isready -U postgres -d todos >/dev/null 2>&1; then
+    echo "dev db ready on localhost:5432 (postgres/postgres, db: todos)"
+    exit 0
+  fi
+  sleep 1
+done
+echo "dev db failed to become ready in 30s" >&2
+exit 1
+"""
+
+[tasks.dev]
+description = "Run the web app with hot reload (starts dev Postgres, applies schema)"
+depends = ["db-apply"]
+# runs air piping logs to my script that prettyfies json slog's, fallsback to just air
+run = "if command -v slogc >/dev/null 2>&1; then air 2>&1 | slogc; else air; fi"
+
+
+
+[tasks.build]
+description = "Build the prod binary (minified CSS)"
+depends = ["generate", "css"]
+run = "go build -o ./tmp/app ."

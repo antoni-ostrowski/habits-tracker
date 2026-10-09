@@ -1,0 +1,21 @@
+package templates
+
+// Layout is the single page shell every full page renders through:
+// doctype, head, stylesheet, htmx, and the bfcache reload guard.
+// Cross-page behavior lives here once, not per page.
+templ Layout(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title } - todos</title>
+			<link rel="stylesheet" href="/static/css/app.css"/>
+			<script src="/static/js/htmx.min.js"></script>
+			<script>window.addEventListener("pageshow", function (e) { if (e.persisted) window.location.reload(); });</script>
+		</head>
+		<body class="bg-neutral-100 font-sans text-neutral-900 antialiased">
+			{ children... }
+		</body>
+	</html>
+}

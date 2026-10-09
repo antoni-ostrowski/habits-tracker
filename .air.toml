@@ -1,0 +1,15 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+bin = "./tmp/main"
+cmd = "go build -o ./tmp/main ."
+exclude_dir = ["tmp"]
+exclude_regex = ["_test.go", "_templ.go$", "app.css$"]
+include_dir = []
+include_ext = ["go", "templ", "css"]
+log = "tmp/air-errors.log"
+# Dev CSS is unminified for readable output; `mise run css` (used by the
+# prod `mise run build`) minifies. templ runs first so generated Go is
+# always in sync before the build.
+pre_cmd = ["templ generate", "tailwindcss -i ./static/css/input.css -o ./static/css/app.css"]
