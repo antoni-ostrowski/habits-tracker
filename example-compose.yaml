@@ -17,7 +17,7 @@ services:
       retries: 30
 
   app:
-    build: .
+    build: antost360/habits-tracker:latest
     ports:
       - "8080:8080"
     environment:
