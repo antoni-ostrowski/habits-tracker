@@ -9,6 +9,11 @@ services:
 steps:
   check:
     image: debian:trixie-slim
+    volumes:
+      - mise-data:/root/.local/share/mise
+      - mise-cache:/root/.cache/mise
+      - go-mod:/root/go/pkg/mod
+      - go-build:/root/.cache/go-build
     commands:
       - apt-get update && apt-get install -y --no-install-recommends ca-certificates curl git
       - curl -fsSL https://mise.run | sh
@@ -22,6 +27,9 @@ steps:
 
   test-integration:
     image: golang:1.27-trixie
+    volumes:
+      - go-mod:/root/go/pkg/mod
+      - go-build:/root/.cache/go-build
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/habits?sslmode=disable
       INTEGRATION_TESTS: 1
