@@ -17,6 +17,7 @@ import (
 	"github.com/antoni-ostrowski/habit-tracker/internal/handlers"
 	"github.com/antoni-ostrowski/habit-tracker/internal/handlers/auth"
 	"github.com/antoni-ostrowski/habit-tracker/internal/handlers/habits"
+	"github.com/antoni-ostrowski/habit-tracker/internal/handlers/health"
 	"github.com/antoni-ostrowski/habit-tracker/internal/handlers/static"
 	"github.com/antoni-ostrowski/habit-tracker/internal/obs"
 
@@ -67,6 +68,7 @@ func Run(ctx context.Context, cfg Config) error {
 	sessions := auth.NewSessionManager(pool)
 	deps := handlers.Deps{
 		Queries:  db.New(pool),
+		Pool:     pool,
 		Sessions: sessions, Logger: logger,
 		Tel: &handlers.Telemetry{Tracer: otel.Tracer(cfg.Service), Meter: otel.Meter(cfg.Service)},
 	}
@@ -112,6 +114,7 @@ func NewServer(d handlers.Deps, staticDir, addr string) *http.Server {
 // in prod, the test tree path in tests.
 func NewHandler(d handlers.Deps, staticDir string) http.Handler {
 	mux := http.NewServeMux()
+	health.Register(mux, d)
 	habits.Register(mux, d)
 	auth.Register(mux, d)
 	static.Register(mux, staticDir)

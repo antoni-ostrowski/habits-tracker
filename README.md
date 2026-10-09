@@ -34,6 +34,7 @@ DELETE /habits/{id}       soft delete (history stays)
 POST /day-zero            set tracking start (day=YYYY-MM-DD, not future)
 GET+POST /signup|/signin  auth forms
 POST /signout             log out
+GET /healthz              probe (DB ping, no auth)
 ```
 
 Mutations require login. Anonymous htmx requests get an `HX-Redirect` to sign-in.

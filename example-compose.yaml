@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: habits
+    volumes:
+      - habits_tracker_pgdata:/var/lib/postgresql/data
+      # internal/db/schema.sql is the schema source of truth; it seeds
+      # the fresh database on first boot (citext ships with the image).
+      - ./internal/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d habits"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/habits?sslmode=disable
+      APP_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  habits_tracker_pgdata:

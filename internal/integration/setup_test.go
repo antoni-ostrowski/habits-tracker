@@ -80,6 +80,7 @@ func setup(t *testing.T) (http.Handler, *db.Queries, *scs.SessionManager, uuid.U
 	// No OTel SDK in tests: discard logs, noop tracer/meter (global defaults).
 	d := handlers.Deps{
 		Queries:  q,
+		Pool:     p,
 		Sessions: sessions,
 		Logger:   slog.New(slog.DiscardHandler),
 		Tel:      &handlers.Telemetry{Tracer: otel.Tracer("test"), Meter: otel.Meter("test")},
